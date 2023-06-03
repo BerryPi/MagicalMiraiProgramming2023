@@ -1,0 +1,101 @@
+<head>
+
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://unpkg.com/textalive-app-api/dist/index.js"></script>
+<script>
+
+  const { Player } = TextAliveApp;
+
+  // 単語が発声されていたら #text に表示する
+
+const animateWord = function (now, unit) {
+
+  if (unit.contains(now)) {
+
+    document.querySelector("#text").textContent = unit.text;
+
+  }
+
+};
+
+
+
+// TextAlive Player を作る
+
+const player = new Player({ app: { token: "" } });
+
+player.addListener({
+
+  // 動画オブジェクトの準備が整ったとき（楽曲に関する情報を読み込み終わったとき）に呼ばれる
+
+  onVideoReady: (v) => {
+
+    // 定期的に呼ばれる各単語の "animate" 関数をセットする
+
+    let w = player.video.firstWord;
+
+    while (w) {
+
+      w.animate = animateWord;
+
+      w = w.next;
+
+    }
+
+  },
+
+});
+</script>
+
+<style>
+    .card {
+        position: absolute;
+        width: 300px;
+        height: 420px;
+        border: 1px solid black;
+        margin: 0px;
+        top: 5%;
+        left: 25%;
+    }
+    .cardtext {
+        font-size: 2em;
+        color: rgb(197, 32, 32);
+    }
+    .cardtext-top {
+        position: relative;
+        left: 10px;
+        top: 10px;
+        height: 0px;
+        width: 0px;
+    }
+    .cardtext-bottom {
+        position: relative;
+        top: calc(100% - 10px);
+        left: calc(100% - 10px);
+        transform: rotate(180deg);
+        height: 0px;
+        width: 0px;
+    }
+    .image-zone {
+        position: relative;
+        width: 210px;
+        height: 294px;
+        left: 45px;
+        top: 63px;
+        border: 1px solid black;
+    }
+    .card-rotation {
+        transform: rotateX(18deg) rotateY(21deg) rotateZ(-29deg);
+    }
+</style>
+
+</head>
+
+<body>
+    <div class="card card-rotation">
+        <div class="cardtext cardtext-top">♥&nbsp;Top</div>
+        <div class="cardtext cardtext-bottom">♥&nbsp;Bottom</div>
+        <div class="image-zone"></div>
+    </div>
+    <span id="text"></span>
+</body>
