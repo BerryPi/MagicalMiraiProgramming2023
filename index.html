@@ -45,6 +45,10 @@ player.addListener({
   },
 
 });
+
+function updateCardText(newText){
+    document.getElementById("cardtext-style").textContent = `.cardtext::after{ content: "${newText}" }`
+}
 </script>
 
 <style>
@@ -90,12 +94,15 @@ player.addListener({
     }
 </style>
 
+<!--One-lining this, it'll be replaced with JS during the animation -->
+<style id="cardtext-style">.cardtext::after{ content: "♥ テキスト" }</style>
+
 </head>
 
 <body>
     <div class="card card-rotation">
-        <div class="cardtext cardtext-top">♥&nbsp;テキスト</div>
-        <div class="cardtext cardtext-bottom">♥&nbsp;テキスト</div>
+        <div class="cardtext cardtext-top"></div>
+        <div class="cardtext cardtext-bottom"></div>
         <div class="image-zone"></div>
     </div>
     <span id="text"></span>
