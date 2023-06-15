@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html>
 <head>
 
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
@@ -52,14 +54,58 @@ function updateCardText(newText){
 </script>
 
 <style>
+    body::before {
+      content: "";
+      position: absolute;
+      width: 1200vw;
+      height: 700vw;
+      top: -250vw;
+      left: -350vw;
+      z-index: -1;
+      background: url("images/background_tile.png") top left repeat;
+      transform: skew(10deg, 20deg);
+    }
+    body {
+      margin: 0px;
+      overflow: hidden;
+    }
+
+    .deck-position {
+        position: relative;
+        top: 5%;
+        left: 25%;
+        transform: rotateX(18deg) rotateY(21deg) rotateZ(-29deg);
+        transform-style: preserve-3d;
+    }
     .card {
+        display: block;
         position: absolute;
         width: 300px;
         height: 420px;
         border: 1px solid black;
         margin: 0px;
-        top: 5%;
-        left: 25%;
+        background-color: rgb(230, 221, 221);
+        transform: translateZ(50px);
+    }
+    .deck-front {
+      display: block;
+      position: absolute;
+      width: 300px;
+      height: 100px;
+      top: 470px;
+      border: 1px solid black;
+      transform: rotateX(90deg) translateZ(100px);
+      background-color: rgb(185, 178, 178);
+    }
+    .deck-right {
+      display: block;
+      position: absolute;
+      width: 100px;
+      height: 420px;
+      left: -100px;
+      border: 1px solid black;
+      transform: rotateY(90deg) translateZ(50px);
+      background-color: rgb(185, 178, 178);
     }
     .cardtext {
         font-size: 2em;
@@ -89,9 +135,8 @@ function updateCardText(newText){
         top: 63px;
         border: 1px solid black;
     }
-    .card-rotation {
-        transform: rotateX(18deg) rotateY(21deg) rotateZ(-29deg);
-    }
+
+    
 </style>
 
 <!--One-lining this, it'll be replaced with JS during the animation -->
@@ -100,10 +145,14 @@ function updateCardText(newText){
 </head>
 
 <body>
-    <div class="card card-rotation">
+  <div class="deck-position">
+    <div class="card">
         <div class="cardtext cardtext-top"></div>
         <div class="cardtext cardtext-bottom"></div>
         <div class="image-zone"></div>
     </div>
-    <span id="text"></span>
+    <div class="deck-front"></div>
+    <div class="deck-right"></div>
+  </div>
 </body>
+</html>
