@@ -54,6 +54,11 @@ function updateCardText(newText){
 </script>
 
 <style>
+    @keyframes throw {
+      100% {
+        offset-distance: 100%;
+      }
+    }
     body::before {
       content: "";
       position: absolute;
@@ -86,6 +91,14 @@ function updateCardText(newText){
         margin: 0px;
         background-color: rgb(230, 221, 221);
         transform: translateZ(50px);
+        offset-path: path("m 150 210");
+        /* The offset path can't start at (0, 0), that would put the centre of the card in
+        the top-left corner of the deck. But starting it at (width/2, height/2) also rotates it,
+        because offset-path defaults to rotating things to line up with the path. This is
+        actually useful for the animation, so it shouldn't be disabled. The solution is to
+        undo that initial rotation, which has a value of atan(height/width) */
+        offset-rotate: auto -0.95rad;
+        animation: throw 2s infinite linear;
     }
     .deck-front {
       display: block;
@@ -135,8 +148,6 @@ function updateCardText(newText){
         top: 63px;
         border: 1px solid black;
     }
-
-    
 </style>
 
 <!--One-lining this, it'll be replaced with JS during the animation -->
