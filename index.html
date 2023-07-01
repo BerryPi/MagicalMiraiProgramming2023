@@ -48,15 +48,27 @@ player.addListener({
 
 });
 
-function updateCardText(newText){
-    document.getElementById("cardtext-style").textContent = `.cardtext::after{ content: "${newText}" }`
+function updateCardText(suit, newText){
+    document.getElementById(`${suit}-cardtext-style`).textContent = `.cardtext::after{ content: "${newText}" }`
 }
 </script>
 
 <style>
     @keyframes throw {
+      25% {
+        z-index: 1;
+        offset-distance: 0%;
+        offset-rotate: 0deg;
+      }
       100% {
+        z-index: 0;
         offset-distance: 100%;
+        offset-rotate: 70deg;
+      }
+    }
+    @keyframes bounce {
+      50% {
+        transform: translateY(20px) rotateX(18deg) rotateY(21deg) rotateZ(-29deg);
       }
     }
     body::before {
@@ -76,11 +88,13 @@ function updateCardText(newText){
     }
 
     .deck-position {
-        position: relative;
-        top: 5%;
+        position: absolute;
+        top: 300px;
         left: 25%;
         transform: rotateX(18deg) rotateY(21deg) rotateZ(-29deg);
         transform-style: preserve-3d;
+        animation: bounce 0.5s ease-in-out infinite;
+        animation-delay: 0.25s;
     }
     .card {
         display: block;
@@ -91,14 +105,14 @@ function updateCardText(newText){
         margin: 0px;
         background-color: rgb(230, 221, 221);
         transform: translateZ(50px);
-        offset-path: path("m 150 210");
+        offset-path: path("M 150 210 C 559 58 1323 166 3165 914");
         /* The offset path can't start at (0, 0), that would put the centre of the card in
         the top-left corner of the deck. But starting it at (width/2, height/2) also rotates it,
         because offset-path defaults to rotating things to line up with the path. This is
         actually useful for the animation, so it shouldn't be disabled. The solution is to
         undo that initial rotation, which has a value of atan(height/width) */
-        offset-rotate: auto -0.95rad;
-        animation: throw 2s infinite linear;
+        offset-rotate: 0deg;
+        animation: throw 2s infinite ease-in;
     }
     .deck-front {
       display: block;
@@ -122,19 +136,21 @@ function updateCardText(newText){
     }
     .cardtext {
         font-size: 2em;
-        color: rgb(197, 32, 32);
         white-space: nowrap;
+    }
+    .cardtext::before {
+      font-size: 1.5em;
     }
     .cardtext-top {
         position: relative;
         left: 10px;
-        top: 10px;
+        top: 5px;
         height: 0px;
         width: 0px;
     }
     .cardtext-bottom {
         position: relative;
-        top: calc(100% - 10px);
+        top: calc(100% - 5px);
         left: calc(100% - 10px);
         transform: rotate(180deg);
         height: 0px;
@@ -148,19 +164,77 @@ function updateCardText(newText){
         top: 63px;
         border: 1px solid black;
     }
+
+    .heart-card {
+      animation-delay: 0s;
+    }
+    .heart-card > .cardtext::before {
+      content: "♥ ";
+    }
+    .heart-card > .cardtext {
+      color: rgb(197, 32, 32);
+    }
+
+    .diamond-card {
+      animation-delay: 1s;
+    }
+    .diamond-card > .cardtext::before {
+      content: "♦ ";
+    }
+    .diamond-card > .cardtext {
+      color: rgb(197, 32, 32);
+    }
+
+    .club-card {
+      animation-delay: 1.5s;
+    }
+    .club-card > .cardtext::before {
+      content: "♣ ";
+    }
+    .club-card > .cardtext {
+      color: rgb(0, 0, 0);
+    }
+
+    .spade-card {
+      animation-delay: 0.5s;
+    }
+    .spade-card > .cardtext::before {
+      content: "♠ ";
+    }
+    .spade-card > .cardtext {
+      color: rgb(0, 0, 0);
+    }
 </style>
 
-<!--One-lining this, it'll be replaced with JS during the animation -->
-<style id="cardtext-style">.cardtext::after{ content: "♥ テキスト" }</style>
+<!--One-lining these, they'll be replaced with JS during the animation -->
+<style id="heart-cardtext-style">.heart-card > .cardtext::after{ content: "テキスト" }</style>
+<style id="diamond-cardtext-style">.diamond-card > .cardtext::after{ content: "テキスト" }</style>
+<style id="club-cardtext-style">.club-card > .cardtext::after{ content: "テキスト" }</style>
+<style id="spade-cardtext-style">.spade-card > .cardtext::after{ content: "テキスト" }</style>
 
 </head>
 
 <body>
   <div class="deck-position">
-    <div class="card">
-        <div class="cardtext cardtext-top"></div>
-        <div class="cardtext cardtext-bottom"></div>
-        <div class="image-zone"></div>
+    <div class="card club-card">
+      <div class="cardtext cardtext-top"></div>
+      <div class="cardtext cardtext-bottom"></div>
+      <div class="image-zone club-image"></div>
+    </div>
+    <div class="card diamond-card">
+      <div class="cardtext cardtext-top"></div>
+      <div class="cardtext cardtext-bottom"></div>
+      <div class="image-zone diamond-image"></div>
+    </div>
+    <div class="card spade-card">
+      <div class="cardtext cardtext-top"></div>
+      <div class="cardtext cardtext-bottom"></div>
+      <div class="image-zone spade-image"></div>
+    </div>
+    <div class="card heart-card">
+      <div class="cardtext cardtext-top"></div>
+      <div class="cardtext cardtext-bottom"></div>
+      <div class="image-zone heart-image"></div>
     </div>
     <div class="deck-front"></div>
     <div class="deck-right"></div>
