@@ -2,9 +2,10 @@
 <html>
 <head>
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script src="https://unpkg.com/textalive-app-api/dist/index.js"></script>
-<script>
+<script type="module">
 
   const { Player } = TextAliveApp;
 
@@ -24,7 +25,11 @@ const animateWord = function (now, unit) {
 
 // TextAlive Player を作る
 
-const player = new Player({ app: { token: "" } });
+const player = new Player({
+  app: { token: "" },
+  mediaElement: document.querySelector("#media"),
+  mediaBannerPosition: "top right"
+});
 
 player.addListener({
 
@@ -74,6 +79,33 @@ function resetAnimation() {
     element.classList.add("card");
   };
 }
+
+//temp, use player callback
+var isPlaying = false;
+
+// Setting up controls
+document.querySelector("a#play").addEventListener("click", (e) => {
+  e.preventDefault();
+  if (isPlaying) {
+    pauseAnimation();
+    document.querySelector("a#play").textContent = "⏵";
+    isPlaying = false;
+  }
+  else {
+    playAnimation();
+    document.querySelector("a#play").textContent = "⏸︎";
+    isPlaying = true;
+  }
+});
+
+document.querySelector("a#stop").addEventListener("click", (e) => {
+  e.preventDefault();
+  if (isPlaying) {
+    document.querySelector("a#play").textContent = "⏵";
+    isPlaying = false;
+  }
+  resetAnimation();
+})
 </script>
 
 <style>
@@ -227,6 +259,30 @@ function resetAnimation() {
     .spade-card > .cardtext {
       color: rgb(0, 0, 0);
     }
+
+    .header {
+      position: absolute;
+      top: 50px;
+      font-family: monospace;
+      background-color: rgb(0, 0, 0, .5);
+      padding: 15px;
+    }
+    .header > a {
+      padding: 15px;
+      color: rgb(197, 32, 32);
+      text-decoration: none;
+    }
+    .header > a:hover {
+      color: rgb(233, 38, 38);
+    }
+    /*The stop icon is a little larger than play and pause,
+    setting the text size to be smaller as a workaround*/
+    #play {
+      font-size: 3em;
+    }
+    #stop {
+      font-size: 2.5em;
+    }
 </style>
 
 <!--One-lining these, they'll be replaced with JS during the animation -->
@@ -239,6 +295,11 @@ function resetAnimation() {
 </head>
 
 <body>
+  <div id="media"></div>
+  <div class="header">
+    <a href="#" id="play" class="disabled">⏵</a>
+    <a href="#" id="stop" class="disabled">⏹</a>
+  </div>
   <div class="deck-position">
     <div class="card club-card">
       <div class="cardtext cardtext-top"></div>
