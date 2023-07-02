@@ -51,6 +51,29 @@ player.addListener({
 function updateCardText(suit, newText){
     document.getElementById(`${suit}-cardtext-style`).textContent = `.cardtext::after{ content: "${newText}" }`
 }
+
+function pauseAnimation(){
+  document.getElementById("animation-state").textContent=".deck-position{animation-play-state: paused;} .card{animation-play-state: paused;}"
+}
+
+function playAnimation(){
+  document.getElementById("animation-state").textContent=".deck-position{animation-play-state: running;} .card{animation-play-state: running;}"
+}
+
+function resetAnimation() {
+  pauseAnimation();
+  // To reset the animation, we remove the classes containing them, trigger reflow, then add them back in
+  for (const element of document.getElementsByClassName("deck-position")) {
+    element.classList.remove("deck-position");
+    element.offsetWidth;
+    element.classList.add("deck-position");
+  };
+  for (const element of document.getElementsByClassName("card")) {
+    element.classList.remove("card");
+    element.offsetWidth;
+    element.classList.add("card");
+  };
+}
 </script>
 
 <style>
@@ -112,7 +135,7 @@ function updateCardText(suit, newText){
         actually useful for the animation, so it shouldn't be disabled. The solution is to
         undo that initial rotation, which has a value of atan(height/width) */
         offset-rotate: 0deg;
-        animation: throw 2s infinite ease-in;
+        animation: throw 2s ease-in infinite;
     }
     .deck-front {
       display: block;
@@ -211,6 +234,7 @@ function updateCardText(suit, newText){
 <style id="diamond-cardtext-style">.diamond-card > .cardtext::after{ content: "テキスト" }</style>
 <style id="club-cardtext-style">.club-card > .cardtext::after{ content: "テキスト" }</style>
 <style id="spade-cardtext-style">.spade-card > .cardtext::after{ content: "テキスト" }</style>
+<style id="animation-state">.deck-position{animation-play-state: paused;} .card{animation-play-state: paused;}</style>
 
 </head>
 
