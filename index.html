@@ -62,7 +62,7 @@ var currentWord;
 const player = new Player({
   app: { token: "" },
   mediaElement: document.querySelector("#media"),
-  mediaBannerPosition: "bottom left"
+  mediaBannerPosition: "top left"
 });
 
 player.addListener({
@@ -86,7 +86,7 @@ player.addListener({
 
   onTimerReady() {
     document.querySelector("#play").className="";
-    document.querySelector("#stop").className="";
+    document.querySelector("#volume").className="";
     document.querySelector("#loading").className="disabled";
   },
 
@@ -171,6 +171,12 @@ document.querySelector("a#stop").addEventListener("click", (e) => {
   }
   resetAnimation();
   return false;
+})
+
+document.querySelector("#volume > input").addEventListener("input", (e) => {
+  if (player) {
+    player.volume = e.target.value;
+  }
 })
 </script>
 
@@ -336,6 +342,7 @@ document.querySelector("a#stop").addEventListener("click", (e) => {
     }
 
     #header {
+      font-size: 3em;
       position: absolute;
       top: 50px;
       font-family: monospace;
@@ -344,6 +351,7 @@ document.querySelector("a#stop").addEventListener("click", (e) => {
       color: rgb(197, 32, 32);
     }
     #header > a {
+      vertical-align: middle;
       padding: 15px;
       color: rgb(197, 32, 32);
       text-decoration: none;
@@ -353,15 +361,16 @@ document.querySelector("a#stop").addEventListener("click", (e) => {
     }
     #loading {
       font-family: fantasy;
-      font-size: 3em;
     }
     /*The stop icon is a little larger than play and pause,
     setting the text size to be smaller as a workaround*/
-    #play {
-      font-size: 3em;
+    #volume {
+      vertical-align: middle;
+      width: 50px;
     }
-    #stop {
-      font-size: 2.5em;
+    #volume > input {
+      vertical-align: middle;
+      accent-color: rgb(233, 38, 38);
     }
 </style>
 
@@ -379,6 +388,7 @@ document.querySelector("a#stop").addEventListener("click", (e) => {
   <div id="header">
     <a href="#" id="play" class="disabled">⏵</a>
     <a href="#" id="stop" class="disabled">⏹</a>
+    <span id="volume" class="disabled">🔈&#xFE0E; <input type="range" id="volume-slider" min="0" max="100" value="80"><label for="volume"></label></span>
     <span id="loading">loading...</span>
   </div>
   <div class="deck-position">
