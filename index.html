@@ -7,54 +7,10 @@
 <script src="https://unpkg.com/textalive-app-api/dist/index.js"></script>
 <script type="module">
 
-  const { Player } = TextAliveApp;
-
-  // 単語が発声されていたら #text に表示する
-
-const animateWord = function (now, unit) {
-
-  if (unit.contains(now)) {
-
-    document.querySelector("#text").textContent = unit.text;
-
-  }
-
-};
-
-
-
-// TextAlive Player を作る
-
-const player = new Player({
-  app: { token: "" },
-  mediaElement: document.querySelector("#media"),
-  mediaBannerPosition: "top right"
-});
-
-player.addListener({
-
-  // 動画オブジェクトの準備が整ったとき（楽曲に関する情報を読み込み終わったとき）に呼ばれる
-
-  onVideoReady: (v) => {
-
-    // 定期的に呼ばれる各単語の "animate" 関数をセットする
-
-    let w = player.video.firstWord;
-
-    while (w) {
-
-      w.animate = animateWord;
-
-      w = w.next;
-
-    }
-
-  },
-
-});
+const suits = ["spade", "diamond", "club", "heart"];
 
 function updateCardText(suit, newText){
-    document.getElementById(`${suit}-cardtext-style`).textContent = `.cardtext::after{ content: "${newText}" }`
+    document.getElementById(`${suit}-cardtext-style`).textContent = `.${suit}-card > .cardtext::after{ content: "${newText}" }`
 }
 
 function pauseAnimation(){
@@ -78,37 +34,151 @@ function resetAnimation() {
     element.offsetWidth;
     element.classList.add("card");
   };
+  suits.forEach((suit) => updateCardText(suit, "Q"));
 }
 
-//temp, use player callback
-var isPlaying = false;
+function appendWord(currentString, newWord){
+  // English words should have spaces in between
+  if (newWord.language == "en") {
+    if (currentString.endsWith(" ")){
+      return currentString + newWord.text + " ";
+    }
+    else {
+      return currentString + " " + newWord.text + " ";
+    }
+  }
+  else {
+    return currentString + newWord.text;
+  }
+}
+
+const { Player } = TextAliveApp;
+
+var hasStarted = false;
+var lastText = null;
+var lastEndTime = 0;
+var currentWord;
+
+const player = new Player({
+  app: { token: "" },
+  mediaElement: document.querySelector("#media"),
+  mediaBannerPosition: "bottom left"
+});
+
+player.addListener({
+
+  onAppReady(app) {
+    if (app.managed) {
+      document.querySelector("#header").className = "disabled";
+    }
+    if (!app.songUrl) {
+      player.createFromSongUrl("https://piapro.jp/t/ucgN/20230110005414", {
+        video: {
+          beatId: 4267297,
+          chordId: 2405019,
+          repetitiveSegmentId: 2405019,
+          lyricId: 56092,
+          lyricDiffId: 9636
+        }
+      });
+    }
+  },
+
+  onTimerReady() {
+    document.querySelector("#play").className="";
+    document.querySelector("#stop").className="";
+    document.querySelector("#loading").className="disabled";
+  },
+
+  onVideoReady: (v) => {
+    currentWord = v.firstWord;
+    lastText = "Q";
+    lastEndTime = currentWord.startTime;
+  },
+
+  onPlay() {
+    playAnimation();
+    document.querySelector("a#play").textContent = "⏸︎";
+  },
+
+  onPause() {
+    pauseAnimation();
+    document.querySelector("a#play").textContent = "⏵";
+    // There doesn't seem to be an event for the track end,
+    // it just calls pause. Sometimes there will be a seek
+    // to the beginning before this callback runs.
+    if (player.mediaPosition >= player.video.duration || player.mediaPosition === 0) {
+      resetAnimation();
+    }
+  },
+
+  onStop() {
+    resetAnimation();
+  },
+
+  onMediaSeek(position){
+  },
+  
+  onTimeUpdate(position) {
+    // We might have reset, assume we have if lastEndTime is more than 5s ahead
+    // Oddly there doesn't seem to be a way to listen for a reset; onStop is only
+    // called if it happens while playing, but not while paused.
+    if (lastEndTime > position + 5000){
+      lastEndTime = player.video.firstWord.startTime;
+    }
+    // Peek two beats ahead
+    let currentBeat = player.findBeat(position).next.next;
+    let currentString = "";
+    // Get all the words starting on the current beat
+    while (currentWord && currentWord.startTime <= currentBeat.endTime){
+      currentString = appendWord(currentString, currentWord);
+      lastEndTime = currentWord.endTime;
+      currentWord = currentWord.next;
+    }
+    // Special case: if the string is empty and the last word hasn't ended by the start of this beat,
+    // extend it to avoid blanks
+    if (currentString === "" && lastEndTime && lastEndTime > currentBeat.startTime){
+      currentString = lastText;
+    }
+    // Use Q as placeholder text until lyrics start, then blanks are OK
+    //if (currentString === "" && player.video.firstWord.startTime > currentBeat.endTime){
+    // currentString = "Q";
+    //}
+    let currentSuit = suits[currentBeat.index % 4];
+    updateCardText(currentSuit, currentString);
+    lastText = currentString;
+  }
+});
 
 // Setting up controls
 document.querySelector("a#play").addEventListener("click", (e) => {
   e.preventDefault();
-  if (isPlaying) {
-    pauseAnimation();
-    document.querySelector("a#play").textContent = "⏵";
-    isPlaying = false;
+  if (player) {
+    if (player.isPlaying) {
+      player.requestPause();
+    }
+    else {
+      player.requestPlay();
+    }
   }
-  else {
-    playAnimation();
-    document.querySelector("a#play").textContent = "⏸︎";
-    isPlaying = true;
-  }
+  return false;
 });
 
 document.querySelector("a#stop").addEventListener("click", (e) => {
   e.preventDefault();
-  if (isPlaying) {
-    document.querySelector("a#play").textContent = "⏵";
-    isPlaying = false;
+  if (player) {
+    player.requestStop();
   }
   resetAnimation();
+  return false;
 })
 </script>
 
 <style>
+  :root {
+    --bpm: 134;
+    --sec-per-beat: calc(60s / var(--bpm));
+  }
     @keyframes throw {
       25% {
         z-index: 1;
@@ -142,13 +212,17 @@ document.querySelector("a#stop").addEventListener("click", (e) => {
       overflow: hidden;
     }
 
+    .disabled {
+      display: none;
+    }
+
     .deck-position {
         position: absolute;
         top: 300px;
         left: 25%;
         transform: rotateX(18deg) rotateY(21deg) rotateZ(-29deg);
         transform-style: preserve-3d;
-        animation: bounce 0.5s ease-in-out infinite;
+        animation: bounce var(--sec-per-beat) ease-in-out infinite;
         animation-delay: 0.25s;
     }
     .card {
@@ -167,7 +241,7 @@ document.querySelector("a#stop").addEventListener("click", (e) => {
         actually useful for the animation, so it shouldn't be disabled. The solution is to
         undo that initial rotation, which has a value of atan(height/width) */
         offset-rotate: 0deg;
-        animation: throw 2s ease-in infinite;
+        animation: throw calc(4 * var(--sec-per-beat)) ease-in infinite;
     }
     .deck-front {
       display: block;
@@ -190,8 +264,9 @@ document.querySelector("a#stop").addEventListener("click", (e) => {
       background-color: rgb(185, 178, 178);
     }
     .cardtext {
-        font-size: 2em;
+        font-size: 1.75em;
         white-space: nowrap;
+        font-family: serif;
     }
     .cardtext::before {
       font-size: 1.5em;
@@ -199,13 +274,13 @@ document.querySelector("a#stop").addEventListener("click", (e) => {
     .cardtext-top {
         position: relative;
         left: 10px;
-        top: 5px;
+        top: 0px;
         height: 0px;
         width: 0px;
     }
     .cardtext-bottom {
         position: relative;
-        top: calc(100% - 5px);
+        top: calc(100%);
         left: calc(100% - 10px);
         transform: rotate(180deg);
         height: 0px;
@@ -221,7 +296,7 @@ document.querySelector("a#stop").addEventListener("click", (e) => {
     }
 
     .heart-card {
-      animation-delay: 0s;
+      animation-delay: calc(0 * var(--sec-per-beat));
     }
     .heart-card > .cardtext::before {
       content: "♥ ";
@@ -231,7 +306,7 @@ document.querySelector("a#stop").addEventListener("click", (e) => {
     }
 
     .diamond-card {
-      animation-delay: 1s;
+      animation-delay: calc(2 * var(--sec-per-beat));
     }
     .diamond-card > .cardtext::before {
       content: "♦ ";
@@ -241,7 +316,7 @@ document.querySelector("a#stop").addEventListener("click", (e) => {
     }
 
     .club-card {
-      animation-delay: 1.5s;
+      animation-delay: calc(3 * var(--sec-per-beat));
     }
     .club-card > .cardtext::before {
       content: "♣ ";
@@ -251,7 +326,7 @@ document.querySelector("a#stop").addEventListener("click", (e) => {
     }
 
     .spade-card {
-      animation-delay: 0.5s;
+      animation-delay: calc(1 * var(--sec-per-beat));
     }
     .spade-card > .cardtext::before {
       content: "♠ ";
@@ -260,20 +335,25 @@ document.querySelector("a#stop").addEventListener("click", (e) => {
       color: rgb(0, 0, 0);
     }
 
-    .header {
+    #header {
       position: absolute;
       top: 50px;
       font-family: monospace;
       background-color: rgb(0, 0, 0, .5);
       padding: 15px;
+      color: rgb(197, 32, 32);
     }
-    .header > a {
+    #header > a {
       padding: 15px;
       color: rgb(197, 32, 32);
       text-decoration: none;
     }
-    .header > a:hover {
+    #header > a:hover {
       color: rgb(233, 38, 38);
+    }
+    #loading {
+      font-family: fantasy;
+      font-size: 3em;
     }
     /*The stop icon is a little larger than play and pause,
     setting the text size to be smaller as a workaround*/
@@ -286,19 +366,20 @@ document.querySelector("a#stop").addEventListener("click", (e) => {
 </style>
 
 <!--One-lining these, they'll be replaced with JS during the animation -->
-<style id="heart-cardtext-style">.heart-card > .cardtext::after{ content: "テキスト" }</style>
-<style id="diamond-cardtext-style">.diamond-card > .cardtext::after{ content: "テキスト" }</style>
-<style id="club-cardtext-style">.club-card > .cardtext::after{ content: "テキスト" }</style>
-<style id="spade-cardtext-style">.spade-card > .cardtext::after{ content: "テキスト" }</style>
+<style id="heart-cardtext-style">.heart-card > .cardtext::after{ content: "Q" }</style>
+<style id="diamond-cardtext-style">.diamond-card > .cardtext::after{ content: "Q" }</style>
+<style id="club-cardtext-style">.club-card > .cardtext::after{ content: "Q" }</style>
+<style id="spade-cardtext-style">.spade-card > .cardtext::after{ content: "Q" }</style>
 <style id="animation-state">.deck-position{animation-play-state: paused;} .card{animation-play-state: paused;}</style>
 
 </head>
 
 <body>
   <div id="media"></div>
-  <div class="header">
+  <div id="header">
     <a href="#" id="play" class="disabled">⏵</a>
     <a href="#" id="stop" class="disabled">⏹</a>
+    <span id="loading">loading...</span>
   </div>
   <div class="deck-position">
     <div class="card club-card">
