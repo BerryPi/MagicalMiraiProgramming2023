@@ -213,6 +213,9 @@ function onVolumeChange() {
   }
   else {
     document.querySelector("#volume").textContent = "🔊\uFE0E ";
+    // If the current volume isn't 0, this should go back to being
+    // a mute button
+    document.querySelector("#volume").toggledValue = 0;
   }
 }
 </script>
