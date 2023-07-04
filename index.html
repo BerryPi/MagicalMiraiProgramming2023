@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html>
+<html lang="jp">
 <head>
+<meta charset="UTF-8">
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script src="https://unpkg.com/textalive-app-api/dist/index.js"></script>
 <script type="module">
 
-const suits = ["spade", "diamond", "club", "heart"];
+const suits = ["heart", "spade", "diamond", "club"];
 
 function updateCardText(suit, newText){
     document.getElementById(`${suit}-cardtext-style`).textContent = `.${suit}-card > .cardtext::after{ content: "${newText}" }`
@@ -59,6 +59,8 @@ var lastText = null;
 var lastEndTime = 0;
 var currentWord;
 
+var beatText = Array();
+
 const player = new Player({
   app: { token: "" },
   mediaElement: document.querySelector("#media"),
@@ -91,9 +93,37 @@ player.addListener({
   },
 
   onVideoReady: (v) => {
-    currentWord = v.firstWord;
-    lastText = "Q";
-    lastEndTime = currentWord.startTime;
+    // Building up the lookup table for beats to card text
+    // The text for a beat is usually the concatenation of all words
+    // starting within that beat.
+    // If a word doesn't end within the next beat, repeat the text until
+    // it does.
+    let currentWord = v.firstWord;
+
+    // For aesthetics (so on load the cards look like actual cards),
+    // until lyrics start the card text should be Q, because Miku is
+    // our Queen :)
+    let lastText = "Q";
+    let lastEndTime = currentWord.startTime;
+    for (const currentBeat of player.getBeats()) {
+      // The last text covers over this whole beat, extend it
+      if (lastEndTime > currentBeat.endTime) {
+        beatText.push(lastText);
+        continue;
+      }
+      // The last text ends on this beat, reset it and collect
+      // words starting on this one (there may not be any)
+      lastText = "";
+      while (currentWord && currentWord.startTime <= currentBeat.endTime) {
+        lastText = appendWord(lastText, currentWord);
+        lastEndTime = currentWord.endTime;
+        currentWord = currentWord.next;
+      }
+      beatText.push(lastText);
+    }
+    // Export for debugging
+    console.log(beatText.length);
+    window.beatText = beatText;
   },
 
   onPlay() {
@@ -107,7 +137,9 @@ player.addListener({
     // There doesn't seem to be an event for the track end,
     // it just calls pause. Sometimes there will be a seek
     // to the beginning before this callback runs.
-    if (player.mediaPosition >= player.video.duration || player.mediaPosition === 0) {
+    // Sometimes the pause doesn't even happen at the very end of
+    // playback. Use a 100ms tolerance.
+    if (player.mediaPosition >= (player.video.duration - 100) || player.mediaPosition === 0) {
       resetAnimation();
     }
   },
@@ -120,33 +152,19 @@ player.addListener({
   },
   
   onTimeUpdate(position) {
-    // We might have reset, assume we have if lastEndTime is more than 5s ahead
-    // Oddly there doesn't seem to be a way to listen for a reset; onStop is only
-    // called if it happens while playing, but not while paused.
-    if (lastEndTime > position + 5000){
-      lastEndTime = player.video.firstWord.startTime;
-    }
-    // Peek two beats ahead
-    let currentBeat = player.findBeat(position).next.next;
-    let currentString = "";
-    // Get all the words starting on the current beat
-    while (currentWord && currentWord.startTime <= currentBeat.endTime){
-      currentString = appendWord(currentString, currentWord);
-      lastEndTime = currentWord.endTime;
-      currentWord = currentWord.next;
-    }
-    // Special case: if the string is empty and the last word hasn't ended by the start of this beat,
-    // extend it to avoid blanks
-    if (currentString === "" && lastEndTime && lastEndTime > currentBeat.startTime){
-      currentString = lastText;
-    }
-    // Use Q as placeholder text until lyrics start, then blanks are OK
-    //if (currentString === "" && player.video.firstWord.startTime > currentBeat.endTime){
-    // currentString = "Q";
-    //}
-    let currentSuit = suits[currentBeat.index % 4];
-    updateCardText(currentSuit, currentString);
-    lastText = currentString;
+    // Draw the current and next beat
+    let currentBeat = player.findBeat(position);
+    this.drawBeat(currentBeat);
+    this.drawBeat(currentBeat.next);
+  },
+
+  drawBeat(beat) {
+    let currText = beatText[beat.index];
+    // Lag the display a bit, so that the
+    // text goes on the card under the one
+    // currently moving
+    let currSuit = suits[(beat.index + 1) % 4];
+    updateCardText(currSuit, currText);
   }
 });
 
@@ -173,7 +191,7 @@ document.querySelector("a#stop").addEventListener("click", (e) => {
   return false;
 })
 
-document.querySelector("#volume > input").addEventListener("input", (e) => {
+document.querySelector("#volume-slider").addEventListener("input", (e) => {
   if (player) {
     player.volume = e.target.value;
   }
@@ -362,13 +380,11 @@ document.querySelector("#volume > input").addEventListener("input", (e) => {
     #loading {
       font-family: fantasy;
     }
-    /*The stop icon is a little larger than play and pause,
-    setting the text size to be smaller as a workaround*/
     #volume {
       vertical-align: middle;
       width: 50px;
     }
-    #volume > input {
+    #volume-slider {
       vertical-align: middle;
       accent-color: rgb(233, 38, 38);
     }
@@ -388,7 +404,7 @@ document.querySelector("#volume > input").addEventListener("input", (e) => {
   <div id="header">
     <a href="#" id="play" class="disabled">⏵</a>
     <a href="#" id="stop" class="disabled">⏹</a>
-    <span id="volume" class="disabled">🔈&#xFE0E; <input type="range" id="volume-slider" min="0" max="100" value="80"><label for="volume"></label></span>
+    <span id="volume" class="disabled">🔊&#xFE0E; <input type="range" id="volume-slider" min="0" max="100" value="80"><label for="volume"></label></span>
     <span id="loading">loading...</span>
   </div>
   <div class="deck-position">
