@@ -35,6 +35,16 @@ function resetAnimation() {
     element.classList.add("card");
   };
   suits.forEach((suit) => updateCardText(suit, "Q"));
+  for (let i = 0; i < 4; i++) {
+    setAnimationPoint(i, 0);
+  }
+}
+
+function setAnimationPoint(suitIndex, cycleProgress) {
+  // This takes an index since the animation start on the cards are staggered.
+  let suitName = suits[suitIndex];
+  let animationTimingStyle = document.querySelector(`#${suitName}-animation-timing`);
+  animationTimingStyle.textContent = `.${suitName}-card {animation-delay: calc((${suitIndex} - ${cycleProgress}) * var(--sec-per-beat));}`
 }
 
 function appendWord(currentString, newWord){
@@ -54,17 +64,14 @@ function appendWord(currentString, newWord){
 
 const { Player } = TextAliveApp;
 
-var hasStarted = false;
-var lastText = null;
-var lastEndTime = 0;
-var currentWord;
-
 var beatText = Array();
+var progressBar = document.querySelector("#playback-progress");
+var isSeeking = false;
 
 const player = new Player({
   app: { token: "" },
   mediaElement: document.querySelector("#media"),
-  mediaBannerPosition: "top left"
+  mediaBannerPosition: "bottom left"
 });
 
 player.addListener({
@@ -88,8 +95,10 @@ player.addListener({
 
   onTimerReady() {
     document.querySelector("#play").className="";
+    document.querySelector("#stop").className="";
     document.querySelector("#volume").className="loaded-block";
     document.querySelector("#volume-slider").className="";
+    progressBar.className="";
     document.querySelector("#loading").className="disabled";
     // Initialize mute function
     document.querySelector("#volume").toggledValue = 0;
@@ -149,14 +158,26 @@ player.addListener({
     resetAnimation();
   },
 
-  onMediaSeek(position){
+  onSeekComplete(position){
+    // The player likes to jump around even after a seek completes.
+    // Raise a flag so that onTimeUpdate can handle the real new time.
+    isSeeking = true;
   },
   
   onTimeUpdate(position) {
+    // Update the progress bar
+    let progress = position / player.video.duration;
+    progressBar.value = progress;
+    progressBar.textContent = progress;
     // Draw the current and next beat
     let currentBeat = player.findBeat(position);
     this.drawBeat(currentBeat);
     this.drawBeat(currentBeat.next);
+    if (isSeeking) {
+      this.drawBeat(currentBeat.previous);
+      this.recalcAnimation(position);
+      isSeeking = false;
+    }
   },
 
   drawBeat(beat) {
@@ -166,6 +187,22 @@ player.addListener({
     // currently moving
     let currSuit = suits[(beat.index + 1) % 4];
     updateCardText(currSuit, currText);
+  },
+
+  recalcAnimation(position) {
+   // We need to know how far this position is not just in the beat, but in the current 4-beat cycle
+    let currentBeat = player.findBeat(position);
+      if (!currentBeat){
+        return;
+      }
+      while (currentBeat.index % 4 != 0) {
+        currentBeat = currentBeat.previous;
+      }
+      let cycleElapsed = position - currentBeat.startTime;
+      let cycleProportion = cycleElapsed / currentBeat.duration
+      for (let i = 0; i < 4; i++){
+        setAnimationPoint(i, cycleProportion);
+      }
   }
 });
 
@@ -218,6 +255,14 @@ function onVolumeChange() {
     document.querySelector("#volume").toggledValue = 0;
   }
 }
+
+progressBar.addEventListener("click", (e) => {
+  e.preventDefault();
+  if (player) {
+    player.requestMediaSeek(player.video.duration * (e.offsetX / progressBar.clientWidth));
+  }
+  return false;
+})
 </script>
 
 <style>
@@ -343,10 +388,6 @@ function onVolumeChange() {
         top: 63px;
         border: 1px solid black;
     }
-
-    .heart-card {
-      animation-delay: calc(0 * var(--sec-per-beat));
-    }
     .heart-card > .cardtext::before {
       content: "♥ ";
     }
@@ -354,9 +395,6 @@ function onVolumeChange() {
       color: rgb(197, 32, 32);
     }
 
-    .diamond-card {
-      animation-delay: calc(2 * var(--sec-per-beat));
-    }
     .diamond-card > .cardtext::before {
       content: "♦ ";
     }
@@ -364,9 +402,6 @@ function onVolumeChange() {
       color: rgb(197, 32, 32);
     }
 
-    .club-card {
-      animation-delay: calc(3 * var(--sec-per-beat));
-    }
     .club-card > .cardtext::before {
       content: "♣ ";
     }
@@ -374,9 +409,6 @@ function onVolumeChange() {
       color: rgb(0, 0, 0);
     }
 
-    .spade-card {
-      animation-delay: calc(1 * var(--sec-per-beat));
-    }
     .spade-card > .cardtext::before {
       content: "♠ ";
     }
@@ -412,6 +444,12 @@ function onVolumeChange() {
       vertical-align: middle;
       accent-color: rgb(233, 38, 38);
     }
+    #playback-progress {
+      position: fixed;
+      width: 100%;
+      height: 20px;
+      accent-color: rgb(233, 38, 38);
+    }
 </style>
 
 <!--One-lining these, they'll be replaced with JS during the animation -->
@@ -420,10 +458,15 @@ function onVolumeChange() {
 <style id="club-cardtext-style">.club-card > .cardtext::after{ content: "Q" }</style>
 <style id="spade-cardtext-style">.spade-card > .cardtext::after{ content: "Q" }</style>
 <style id="animation-state">.deck-position{animation-play-state: paused;} .card{animation-play-state: paused;}</style>
+<style id="heart-animation-timing">.heart-card {animation-delay: calc(0 * var(--sec-per-beat));}</style>
+<style id="diamond-animation-timing">.diamond-card {animation-delay: calc(2 * var(--sec-per-beat));}</style>
+<style id="club-animation-timing">.club-card {animation-delay: calc(3 * var(--sec-per-beat));}</style>
+<style id="spade-animation-timing">.spade-card {animation-delay: calc(1 * var(--sec-per-beat));}</style>
 
 </head>
 
 <body>
+  <progress id="playback-progress" class="disabled" max="1" value="0">0</progress>
   <div id="media"></div>
   <div id="header">
     <a href="#" id="play" class="disabled">⏵</a>
