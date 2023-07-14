@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lobster+Two&family=Noto+Sans+Symbols+2&family=Zen+Old+Mincho&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script src="https://unpkg.com/textalive-app-api/dist/index.js"></script>
 <script type="module">
@@ -312,8 +315,8 @@ progressBar.addEventListener("click", (e) => {
 
     .deck-position {
         position: absolute;
-        top: 300px;
-        left: 25%;
+        top: 400px;
+        left: 40%;
         transform: rotateX(18deg) rotateY(21deg) rotateZ(-29deg);
         transform-style: preserve-3d;
         animation: bounce var(--sec-per-beat) ease-in-out infinite;
@@ -360,10 +363,11 @@ progressBar.addEventListener("click", (e) => {
     .cardtext {
         font-size: 1.75em;
         white-space: nowrap;
-        font-family: serif;
+        font-family: 'Lobster Two', 'Zen Old Mincho', serif;
     }
     .cardtext::before {
       font-size: 1.5em;
+      font-family: 'Noto Sans Symbols 2', sans-serif;
     }
     .cardtext-top {
         position: relative;
@@ -420,7 +424,7 @@ progressBar.addEventListener("click", (e) => {
       font-size: 3em;
       position: absolute;
       top: 50px;
-      font-family: monospace;
+      font-family: 'Lobster Two', fantasy;
       background-color: rgb(0, 0, 0, .5);
       padding: 15px;
       color: rgb(197, 32, 32);
@@ -430,12 +434,10 @@ progressBar.addEventListener("click", (e) => {
       padding: 5px;
       color: rgb(197, 32, 32);
       text-decoration: none;
+      font-family: 'Noto Sans Symbols 2', sans-serif;
     }
     #header > a:hover {
       color: rgb(233, 38, 38);
-    }
-    #loading {
-      font-family: fantasy;
     }
     #volume {
       width: 65px;
