@@ -278,11 +278,16 @@ progressBar.addEventListener("click", (e) => {
         z-index: 1;
         offset-distance: 0%;
         offset-rotate: 0deg;
+        transform: translateZ(50px) rotateY(0deg);
+      }
+      40% {
+        transform: translateZ(50px) rotateY(0deg);
       }
       100% {
         z-index: 0;
         offset-distance: 100%;
         offset-rotate: 70deg;
+        transform: translateZ(50px) rotateY(80deg);
       }
     }
     @keyframes bounce {
