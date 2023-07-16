@@ -389,13 +389,9 @@ progressBar.addEventListener("click", (e) => {
         height: 0px;
         width: 0px;
     }
-    .image-zone {
-        position: relative;
-        width: 210px;
-        height: 294px;
-        left: 45px;
-        top: 63px;
-        border: 1px solid black;
+
+    .heart-card {
+      background-image: url("images/card_heart.png");
     }
     .heart-card > .cardtext::before {
       content: "♥ ";
@@ -404,6 +400,9 @@ progressBar.addEventListener("click", (e) => {
       color: rgb(197, 32, 32);
     }
 
+    .diamond-card {
+      background-image: url("images/card_diamond.png");
+    }
     .diamond-card > .cardtext::before {
       content: "♦ ";
     }
@@ -411,6 +410,9 @@ progressBar.addEventListener("click", (e) => {
       color: rgb(197, 32, 32);
     }
 
+    .club-card {
+      background-image: url("images/card_club.png");
+    }
     .club-card > .cardtext::before {
       content: "♣ ";
     }
@@ -418,6 +420,9 @@ progressBar.addEventListener("click", (e) => {
       color: rgb(0, 0, 0);
     }
 
+    .spade-card {
+      background-image: url("images/card_spade.png");
+    }
     .spade-card > .cardtext::before {
       content: "♠ ";
     }
@@ -426,7 +431,7 @@ progressBar.addEventListener("click", (e) => {
     }
 
     #header {
-      font-size: 3em;
+      font-size: 7em;
       position: absolute;
       top: 50px;
       font-family: 'Lobster Two', fantasy;
@@ -445,11 +450,14 @@ progressBar.addEventListener("click", (e) => {
       color: rgb(233, 38, 38);
     }
     #volume {
-      width: 65px;
+      width: 300px;
     }
     #volume-slider {
       vertical-align: middle;
       accent-color: rgb(233, 38, 38);
+      width: 150px;
+      transform-origin: center right;
+      transform: scale(2);
     }
     #playback-progress {
       position: fixed;
@@ -485,22 +493,18 @@ progressBar.addEventListener("click", (e) => {
     <div class="card club-card">
       <div class="cardtext cardtext-top"></div>
       <div class="cardtext cardtext-bottom"></div>
-      <div class="image-zone club-image"></div>
     </div>
     <div class="card diamond-card">
       <div class="cardtext cardtext-top"></div>
       <div class="cardtext cardtext-bottom"></div>
-      <div class="image-zone diamond-image"></div>
     </div>
     <div class="card spade-card">
       <div class="cardtext cardtext-top"></div>
       <div class="cardtext cardtext-bottom"></div>
-      <div class="image-zone spade-image"></div>
     </div>
     <div class="card heart-card">
       <div class="cardtext cardtext-top"></div>
       <div class="cardtext cardtext-bottom"></div>
-      <div class="image-zone heart-image"></div>
     </div>
     <div class="deck-front"></div>
     <div class="deck-right"></div>
